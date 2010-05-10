@@ -1,0 +1,1 @@
+new com.lazerbank.Repository()

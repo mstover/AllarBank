@@ -1,0 +1,1 @@
+[@lazerbank_email_recipients@] as String[]

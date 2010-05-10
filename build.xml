@@ -1,0 +1,184 @@
+<project name="lazerbank">
+	<taskdef resource="org/aspectj/tools/ant/taskdefs/aspectjTaskdefs.properties" />
+	<dirname file="${ant.file.lazerbank}" property="lazerbank.basedir" />
+	<property name="lazerweb" location="${lazerbank.basedir}/../lazerweb" />
+	<property name="lazerweb.contexts" location="${lazerweb}/src/web/web-inf/contexts" />
+	<property name="src.dir" location="${lazerbank.basedir}/src" />
+	<property name="src.java" location="${src.dir}/java" />
+	<property name="src.config" location="${src.dir}/config" />
+	<property name="test.src" location="${src.dir}/test" />
+	<property name="src.test.java" location="${test.src}/java" />
+	<property name="test.config" location="${test.src}/config" />
+	<property name="dist.dir" location="${lazerbank.basedir}/dist" />
+
+	<property name="build.dir" location="${lazerbank.basedir}/build" />
+	<property name="build.classes.dir" location="${build.dir}/classes" />
+	<property name="build.test.classes" location="${build.dir}/test/classes" />
+	<property name="coinjema-version" value="1.0" />
+
+	<!-- Build classpath -->
+	<path id="classpath">
+		<fileset dir="${lazerweb}/">
+			<include name="**/lib/*.jar" />
+			<include name="**/dev_lib/*.jar" />
+			<include name="**/dist/*.jar" />
+		</fileset>
+		<pathelement location="${tools.jar}" />
+	</path>
+
+	<path id="classpath-test">
+		<path refid="classpath" />
+		<pathelement location="${build.classes.dir}" />
+		<pathelement location="${build.test.classes}" />
+		<pathelement location="dev_lib/junit.jar"/>
+	</path>
+
+	<path id="sources">
+		<pathelement location="${src.java}" />
+	</path>
+
+	<!-- test sources -->
+	<path id="test-source">
+		<pathelement location="${src.test.java}" />
+	</path>
+
+	<target name="jar-lazerweb">
+		<ant antfile="${lazerweb}/build.xml" target="jar-core" dir="${lazerweb}" inheritall="false" />
+	</target>
+
+	<target name="deploy-config">
+		<mkdir dir="${build.dir}/LazerBank/config" />
+		<filter filtersfile="${lazerbank.basedir}/descriptors/${descriptor.file}" />
+		<copy todir="${build.dir}/LazerBank/config" filtering="true">
+			<fileset dir="${lazerweb.contexts}">
+				<exclude name="keywording/" />
+				<exclude name="lazerweb/" />
+				<exclude name="logging/" />
+				<exclude name="mediabank/" />
+				<exclude name="webvm/" />
+				<exclude name="ormProfiling/" />
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/LazerBank/config/_ormMapping">
+			<fileset dir="${lazerweb}/src/web/web-inf/ormMapping" />
+		</copy>
+		<copy todir="${build.dir}/LazerBank/config/_sqlTemplates">
+			<fileset dir="${lazerweb}/src/web/web-inf/sqlTemplates" />
+		</copy>
+		<copy todir="${build.dir}/LazerBank/config" filtering="true" overwrite="true">
+			<fileset dir="${src.dir}/config" >
+				<exclude name="lazerbank.sh"/>
+			</fileset>
+		</copy>
+		<copy todir="${build.dir}/LazerBank" file="${src.dir}/config/lazerbank.sh" filtering="true"/>
+		<copy todir="${build.dir}/LazerBank" file="${src.dir}/config/recatalog.sh" filtering="true"/>
+		<copy todir="${build.dir}/LazerBank" file="${src.dir}/config/syncHbiLogos.sh" filtering="true"/>
+	</target>
+
+	<target name="deploy-libs" depends="deploy-config">
+		<mkdir dir="${build.dir}/LazerBank/lib" />
+		<patternset id="ext-jars">
+			<include name="*.jar" />
+			<include name="*.zip" />
+			<exclude name="ant*" />
+			<exclude name="interclient.jar" />
+			<exclude name="jai*" />
+			<exclude name="jstl.jar" />
+			<exclude name="mini*" />
+			<exclude name="mlib*" />
+			<exclude name="standard.jar" />
+			<exclude name="taglibs*" />
+		</patternset>
+		<copy todir="${build.dir}/LazerBank/lib">
+			<fileset dir="${lazerweb}/lib">
+				<patternset refid="ext-jars"/>
+			</fileset>
+			<fileset dir="${lazerweb}/runtime_lib">
+				<patternset refid="ext-jars"/>
+			</fileset>
+			<fileset dir="${lazerweb}/dev_lib">
+				<patternset refid="ext-jars"/>
+			</fileset>
+		</copy>
+		<copy tofile="${build.dir}/LazerBank/lib/lazerdam.jar" file="${lazerweb}/dist/lazerdam.jar"/>
+		<copy todir="${build.dir}/LazerBank/lib">
+			<fileset dir="${lazerbank.basedir}/lib">
+				<patternset refid="ext-jars"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="jar" depends="compile,deploy-config">
+		<jar destfile="${build.dir}/LazerBank/lazerbank.jar" basedir="${build.classes.dir}" manifest="${src.dir}/config/MANIFEST" />
+	</target>
+
+	<target name="dist" depends="compile,deploy-libs,jar">
+		<zip destfile="${dist.dir}/LazerBank.zip">
+			<zipfileset dir="${build.dir}">
+				<include name="LazerBank/**" />
+			</zipfileset>
+		</zip>
+	</target>
+
+	<target name="compile" depends="clean,jar-lazerweb">
+		<iajc sourceRootsRef="sources" classpathRef="classpath" destdir="${build.classes.dir}" source="1.5" target="1.5" 
+			aspectPath="${lazerweb}/lib/coinjema-core-${coinjema-version}.jar" />
+
+		<echo message="You may need to restart the servlet engine for changes to take effect." />
+	</target>
+
+	<!-- compiles java sources to the server -->
+	<target name="compile_test" depends="compile">
+		<iajc sourceRootsRef="test-source" classpathRef="classpath-test" source="1.5" target="1.5" aspectPath="${lazerweb}/lib/coinjema-core-${coinjema-version}.jar" destdir="${build.test.classes}" />
+		<echo message="You may need to restart the servlet engine for changes to take effect." />
+	</target>
+
+
+	<target name="copy_config" depends="clean">
+		<copy todir="${lazerbank.basedir}/test">
+			<fileset dir="${lazerweb.contexts}">
+				<exclude name="keywording/" />
+				<exclude name="lazerweb/" />
+				<exclude name="logging/" />
+				<exclude name="mediabank/" />
+				<exclude name="webvm/" />
+				<exclude name="ormProfiling/" />
+			</fileset>
+		</copy>
+		<copy todir="${lazerbank.basedir}/test/_ormMapping">
+			<fileset dir="${lazerweb}/src/web/web-inf/ormMapping" />
+		</copy>
+		<copy todir="${lazerbank.basedir}/test/_sqlTemplates">
+			<fileset dir="${lazerweb}/src/web/web-inf/sqlTemplates" />
+		</copy>
+	</target>
+
+	<target name="test" depends="compile,compile_test">
+		<junit dir="${lazerbank.basedir}">
+		    	  				  <classpath>
+		    	  				    <path refid="classpath-test"/>
+		    	  				    <pathelement path="${build.test.classes}"/>
+		    	  				  </classpath>
+
+		    	  				  <formatter type="plain" usefile="no" />
+
+		    	  				  <batchtest fork="yes">
+		    	  				    <fileset dir="${src.test.java}">
+		    	  				      <include name="**/*.java"/>
+		    	  				      <exclude name="**/nontest/**"/>
+		    	  				    </fileset>
+		    	  				  </batchtest>
+		    	  				</junit>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${build.test.classes}" />
+		<mkdir dir="${build.classes.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+
+
+</project>

@@ -1,0 +1,7 @@
+mapping {
+	class=MissingDigitalAsset
+	pairs {
+		setPath=path
+		setPrimary=primary_label
+	}
+}

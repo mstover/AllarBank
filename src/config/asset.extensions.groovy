@@ -1,0 +1,1 @@
+[["gif","jpg","tif","tiff","psd","eps","png","pdf","dcs2","dcs"]] as HashSet

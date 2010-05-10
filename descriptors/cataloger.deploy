@@ -1,0 +1,15 @@
+db_username=damuser
+db_password=r!VAld0
+db_url=voltaire/var/firebird/lazerweb.fdb
+EMAIL_ACTIVE=true
+lazerbank_email_recipients="mikes@lazerinc.com","tomc@lazerinc.com","merrickw@lazerinc.com"
+timeout_minutes=1
+threads=2
+start_size=1024
+jvm_size=1024
+magic_path=
+watched_folder=/mnt/Scanbank/uploadFolder
+lazerweb_host=voltaire
+username=mstover
+password=[NBfM]
+java_bin=/usr/java/jdk1.5.0_07/bin/

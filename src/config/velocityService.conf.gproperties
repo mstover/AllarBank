@@ -1,0 +1,4 @@
+runtime.log=velocity.log
+file.resource.loader.path="${registry.root.directory.rootDirectory.absolutePath}/_sqlTemplates".toString()
+file.resource.loader.cache=false
+velocimacro.library=sql.vm

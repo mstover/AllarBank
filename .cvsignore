@@ -1,0 +1,12 @@
+TestNG
+examine-test
+test-output
+test
+.DS_Store
+ajcore.*
+test-backup
+context
+build
+suite.launch
+dist
+.settings
